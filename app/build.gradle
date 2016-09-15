@@ -45,4 +45,10 @@ dependencies {
 
     // https://github.com/hongyangAndroid/baseAdapter
     compile 'com.zhy:base-rvadapter:3.0.3'
+
+    // https://github.com/JeasonWong/Particle
+    compile 'me.wangyuwei:ParticleView:1.0.3'
+
+    // https://github.com/Blankj/AndroidUtilCode
+    compile 'com.blankj:utilcode:1.2.0'
 }

@@ -1,4 +1,4 @@
-package cn.shu.sakura.littleblackbike;
+package cn.shu.sakura.littleblackbike.activity;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -16,10 +16,12 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import cn.shu.sakura.littleblackbike.R;
+import cn.shu.sakura.littleblackbike.model.Bike;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<String> mDatas = new ArrayList<>();
+//    private ArrayList<Bike> mDatas = new ArrayList<>();
 
     @BindView(R.id.tool_bar)
     Toolbar toolBar;
@@ -38,17 +40,17 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolBar);
 
-        recyclerView.setAdapter(new CommonAdapter(MainActivity.this, R.layout.bike_card, mDatas) {
-            @Override
-            protected void convert(ViewHolder holder, Object o, int position) {
-
-            }
-
-            @Override
-            public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-            }
-        });
+//        recyclerView.setAdapter(new CommonAdapter(MainActivity.this, R.layout.bike_card, mDatas) {
+//            @Override
+//            protected void convert(ViewHolder holder, Object o, int position) {
+//
+//            }
+//
+//            @Override
+//            public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+//
+//            }
+//        });
 
 //        AVObject testObject = new AVObject("testObject");
 //        testObject.put("foo", "bar");
@@ -70,9 +72,13 @@ public class MainActivity extends AppCompatActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.add_fab: {
-
+                showAddDialog();
                 break;
             }
         }
+    }
+
+    private void showAddDialog() {
+
     }
 }

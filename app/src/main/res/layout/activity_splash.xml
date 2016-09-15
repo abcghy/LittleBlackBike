@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:pv="http://schemas.android.com/apk/res-auto"
+    tools:context="cn.shu.sakura.littleblackbike.activity.SplashActivity">
+
+    <me.wangyuwei.particleview.ParticleView
+        android:id="@+id/particle_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        pv:pv_background_color="@color/colorPrimary"
+        pv:pv_host_text="@string/app_name_zh"
+        pv:pv_particle_text="LBB"
+        pv:pv_particle_text_size="14sp"
+        pv:pv_text_color="#000000" />
+
+</RelativeLayout>
