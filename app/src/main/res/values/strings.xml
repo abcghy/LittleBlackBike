@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">LittleBlackBike</string>
+    <string name="app_name_zh">小黑车</string>
+
+    <string name="bike_id">车号：</string>
+    <string name="bike_password">密码：</string>
+    <string name="description_image_view_thumb_up">点赞图标</string>
+
+</resources>
