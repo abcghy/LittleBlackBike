@@ -51,4 +51,10 @@ dependencies {
 
     // https://github.com/Blankj/AndroidUtilCode
     compile 'com.blankj:utilcode:1.2.0'
+
+    // https://github.com/afollestad/material-dialogs
+    compile 'com.afollestad.material-dialogs:core:0.9.0.1'
+
+    // https://github.com/rengwuxian/MaterialEditText
+    compile 'com.rengwuxian.materialedittext:library:2.1.4'
 }

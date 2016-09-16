@@ -38,7 +38,7 @@ public class Bike extends AVObject {
     }
 
     public String getUpDeviceId() {
-        return getString("deviceId");
+        return getString("upDeviceId");
     }
 
     public void setUpDeviceId(String upDeviceId) {

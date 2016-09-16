@@ -1,17 +1,29 @@
 package cn.shu.sakura.littleblackbike.activity;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.avos.avoscloud.AVException;
+import com.avos.avoscloud.AVObject;
+import com.avos.avoscloud.AVQuery;
+import com.avos.avoscloud.AVUser;
+import com.avos.avoscloud.FindCallback;
+import com.avos.avoscloud.SaveCallback;
 import com.lapism.searchview.SearchView;
-import com.zhy.adapter.recyclerview.CommonAdapter;
-import com.zhy.adapter.recyclerview.base.ViewHolder;
+import com.orhanobut.logger.Logger;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -79,6 +91,60 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showAddDialog() {
+        View view = LayoutInflater
+                .from(MainActivity.this)
+                .inflate(R.layout.layout_add_password, null, true);
 
+        final MaterialEditText addBikeId = (MaterialEditText) view.findViewById(R.id.add_bike_id);
+        final MaterialEditText addBikePassword = (MaterialEditText) view.findViewById(R.id.add_bike_password);
+
+        new MaterialDialog.Builder(MainActivity.this)
+                .title("添加密码")
+                .customView(R.layout.layout_add_password, false)
+                .positiveText("确定")
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        final String addBikeIdString = addBikeId.getText().toString();
+                        final String addBikePasswordString = addBikePassword.getText().toString();
+
+                        // 先判断，这个用户是否上传过这个车子，如果上传过，那就不行
+                        AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
+                        bikeAVQuery.whereEqualTo("upDeviceId", AVUser.getCurrentUser().getUsername());
+                        bikeAVQuery.findInBackground(new FindCallback<Bike>() {
+                            @Override
+                            public void done(List<Bike> list, AVException e) {
+                                  // 如果有，说明不能上传，如果为零，可以上传
+                                if (list != null && list.size() > 0) {
+                                    // 不可上传
+                                    Toast.makeText(MainActivity.this, "你已上传过该车辆", Toast.LENGTH_SHORT).show();
+                                } else if (list == null || list.size() == 0) {
+                                    // 上传该车辆
+                                    Bike bike = new Bike();
+                                    bike.setBikeId(addBikeIdString);
+                                    bike.setPassword(addBikePasswordString);
+                                    bike.setUpDeviceId(AVUser.getCurrentUser().getUsername());
+                                    bike.setVote(0);
+                                    bike.saveInBackground(new SaveCallback() {
+                                        @Override
+                                        public void done(AVException e) {
+                                            if (e == null) {
+                                                // 成功
+                                                Logger.d("上传成功");
+                                                // 提示用户上传成功
+                                                Toast.makeText(MainActivity.this, R.string.add_success_toast, Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                // 失败
+                                                Toast.makeText(MainActivity.this, R.string.add_error_toast, Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                })
+                .show();
     }
+
 }

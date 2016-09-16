@@ -18,6 +18,8 @@ import me.wangyuwei.particleview.ParticleView;
 
 public class SplashActivity extends AppCompatActivity {
 
+    private int count = 0;
+
     @BindView(R.id.particle_view)
     ParticleView particleView;
 
@@ -28,6 +30,13 @@ public class SplashActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         particleView.startAnim();
+        particleView.setOnParticleAnimListener(new ParticleView.ParticleAnimListener() {
+            @Override
+            public void onAnimationEnd() {
+                count++;
+                goToMainIfBothFinished();
+            }
+        });
 
         logInAndSignUp();
     }
@@ -44,8 +53,8 @@ public class SplashActivity extends AppCompatActivity {
                     // 登陆成功，说明注册过了
                     Logger.d("登陆成功");
                     // 登陆成功，进入 MainActivity
-                    Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                    startActivity(intent);
+                    count++;
+                    goToMainIfBothFinished();
                 } else {
                     // 登陆失败，分析失败原因，如果没有注册，注册
                     // https://leancloud.cn/docs/error_code.html#_211
@@ -72,5 +81,13 @@ public class SplashActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void goToMainIfBothFinished() {
+        if (count >= 2) {
+            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 }

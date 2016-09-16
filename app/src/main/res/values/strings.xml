@@ -6,4 +6,11 @@
     <string name="bike_password">密码：</string>
     <string name="description_image_view_thumb_up">点赞图标</string>
 
+    <string name="bike_id_without_colon">车号</string>
+    <string name="bike_password_without_colon">密码</string>
+
+    <string name="add_success_toast">上传成功，其他小伙伴能够看到你的分享</string>
+    <string name="add_error_toast">上传失败，未知原因</string>
+    <string name="already_add_the_bike">上传失败，您已上传过该车辆</string>
+
 </resources>
