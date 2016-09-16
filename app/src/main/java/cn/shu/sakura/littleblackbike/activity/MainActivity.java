@@ -4,17 +4,16 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.avos.avoscloud.AVException;
-import com.avos.avoscloud.AVObject;
 import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.FindCallback;
@@ -22,7 +21,10 @@ import com.avos.avoscloud.SaveCallback;
 import com.lapism.searchview.SearchView;
 import com.orhanobut.logger.Logger;
 import com.rengwuxian.materialedittext.MaterialEditText;
+import com.zhy.adapter.recyclerview.CommonAdapter;
+import com.zhy.adapter.recyclerview.base.ViewHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -33,7 +35,7 @@ import cn.shu.sakura.littleblackbike.model.Bike;
 
 public class MainActivity extends AppCompatActivity {
 
-//    private ArrayList<Bike> mDatas = new ArrayList<>();
+    private ArrayList<Bike> resources = new ArrayList<>();
 
     @BindView(R.id.tool_bar)
     Toolbar toolBar;
@@ -44,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.add_fab)
     FloatingActionButton addFab;
 
+    private LinearLayoutManager layoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,32 +56,49 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolBar);
 
-//        recyclerView.setAdapter(new CommonAdapter(MainActivity.this, R.layout.bike_card, mDatas) {
-//            @Override
-//            protected void convert(ViewHolder holder, Object o, int position) {
-//
-//            }
-//
-//            @Override
-//            public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-//
-//            }
-//        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
 
-//        AVObject testObject = new AVObject("testObject");
-//        testObject.put("foo", "bar");
-//        testObject.saveInBackground(new SaveCallback() {
-//            @Override
-//            public void done(AVException e) {
-//                if (e == null) {
-////                    Log.d("test", "成功");
-//                    Logger.d("成功");
-//                } else {
-////                    Log.d("test", "失败");
-//                    Logger.d("失败");
-//                }
-//            }
-//        });
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
+                bikeAVQuery.whereEqualTo("bikeId", query);
+                bikeAVQuery.findInBackground(new FindCallback<Bike>() {
+                    @Override
+                    public void done(List<Bike> list, AVException e) {
+                        if (e == null) {
+                            // 成功
+                            Logger.d("搜索成功" + Thread.currentThread().getName() + Thread.currentThread().getId());
+                            resources.addAll(list);
+                            recyclerView.getAdapter().notifyDataSetChanged();
+                        } else {
+                            // 失败
+                            Logger.d("搜索失败");
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                return false;
+            }
+        });
+
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(MainActivity.this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(new CommonAdapter<Bike>(MainActivity.this, R.layout.bike_card, resources) {
+
+            @Override
+            protected void convert(ViewHolder holder, Bike bike, int position) {
+                holder.setText(R.id.bike_id, bike.getBikeId());
+                holder.setText(R.id.bike_password, bike.getPassword());
+                holder.setText(R.id.text_thumb_up, String.valueOf(bike.getVote()));
+            }
+
+        });
+
     }
 
     @OnClick(R.id.add_fab)
@@ -100,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
         new MaterialDialog.Builder(MainActivity.this)
                 .title("添加密码")
-                .customView(R.layout.layout_add_password, false)
+                .customView(view, false)
                 .positiveText("确定")
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
@@ -114,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                         bikeAVQuery.findInBackground(new FindCallback<Bike>() {
                             @Override
                             public void done(List<Bike> list, AVException e) {
-                                  // 如果有，说明不能上传，如果为零，可以上传
+                                // 如果有，说明不能上传，如果为零，可以上传
                                 if (list != null && list.size() > 0) {
                                     // 不可上传
                                     Toast.makeText(MainActivity.this, "你已上传过该车辆", Toast.LENGTH_SHORT).show();
