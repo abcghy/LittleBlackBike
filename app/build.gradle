@@ -57,4 +57,7 @@ dependencies {
 
     // https://github.com/rengwuxian/MaterialEditText
     compile 'com.rengwuxian.materialedittext:library:2.1.4'
+
+    // https://github.com/pnikosis/materialish-progress
+    compile 'com.pnikosis:materialish-progress:1.7'
 }

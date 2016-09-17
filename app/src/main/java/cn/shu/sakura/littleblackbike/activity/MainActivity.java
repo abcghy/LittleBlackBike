@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -35,6 +36,11 @@ import cn.shu.sakura.littleblackbike.model.Bike;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final static int EMPTY    = 1;
+    private final static int LOADING  = 2;
+    private final static int FINISHED = 3;
+    private final static int ERROR    = 4;
+
     private ArrayList<Bike> resources = new ArrayList<>();
 
     @BindView(R.id.tool_bar)
@@ -45,8 +51,12 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     @BindView(R.id.add_fab)
     FloatingActionButton addFab;
+    @BindView(R.id.state_view)
+    RelativeLayout stateView;
 
     private LinearLayoutManager layoutManager;
+
+    private int mState = EMPTY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +74,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
+                searchView.hideKeyboard();
+                searchView.clearFocus();
+
+                mState = LOADING;
+                refreshState();
+
                 AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
                 bikeAVQuery.whereEqualTo("bikeId", query);
                 bikeAVQuery.findInBackground(new FindCallback<Bike>() {
@@ -71,19 +87,44 @@ public class MainActivity extends AppCompatActivity {
                     public void done(List<Bike> list, AVException e) {
                         if (e == null) {
                             // 成功
-                            Logger.d("搜索成功" + Thread.currentThread().getName() + Thread.currentThread().getId());
-                            resources.addAll(list);
+                            Logger.d("搜索成功");
+
+                            resources.clear();
+                            if (list == null || list.size() == 0) {
+                                mState = EMPTY;
+                                refreshState();
+                            } else if (list.size() > 0){
+                                resources.addAll(list);
+                                mState = FINISHED;
+                                refreshState();
+                            }
                             recyclerView.getAdapter().notifyDataSetChanged();
                         } else {
                             // 失败
                             Logger.d("搜索失败");
                             e.printStackTrace();
+
+                            mState = ERROR;
+                            refreshState();
                         }
                     }
                 });
                 return false;
             }
         });
+
+        // 每当按下搜索键，selection到最后，键盘关闭
+//        searchView.setOnKeyListener(new View.OnKeyListener() {
+//            @Override
+//            public boolean onKey(View v, int keyCode, KeyEvent event) {
+//                Logger.d("搜索按钮: view: " + v + ", keyCode: " + keyCode + ", event: " + event);
+//
+//                if (keyCode == KeyEvent.KEYCODE_SEARCH || keyCode == KeyEvent.KEYCODE_ENTER) {
+//                    searchView.hideKeyboard();
+//                }
+//                return false;
+//            }
+//        });
 
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(MainActivity.this);
@@ -99,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+        refreshState();
     }
 
     @OnClick(R.id.add_fab)
@@ -166,6 +208,42 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .show();
+    }
+
+    private void refreshState() {
+        switch (mState) {
+            case EMPTY: {
+                View view = LayoutInflater
+                        .from(MainActivity.this)
+                        .inflate(R.layout.layout_empty, new RelativeLayout(MainActivity.this), false);
+                stateView.removeAllViews();
+                stateView.addView(view);
+                stateView.setVisibility(View.VISIBLE);
+                break;
+            }
+            case LOADING: {
+                View view = LayoutInflater
+                        .from(MainActivity.this)
+                        .inflate(R.layout.layout_loading, new RelativeLayout(MainActivity.this), true);
+                stateView.removeAllViews();
+                stateView.addView(view);
+                stateView.setVisibility(View.VISIBLE);
+                break;
+            }
+            case FINISHED: {
+                stateView.setVisibility(View.INVISIBLE);
+                break;
+            }
+            case ERROR: {
+                View view = LayoutInflater
+                        .from(MainActivity.this)
+                        .inflate(R.layout.layout_error, new RelativeLayout(MainActivity.this), true);
+                stateView.removeAllViews();
+                stateView.addView(view);
+                stateView.setVisibility(View.VISIBLE);
+                break;
+            }
+        }
     }
 
 }

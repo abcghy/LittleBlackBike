@@ -13,4 +13,10 @@
     <string name="add_error_toast">上传失败，未知原因</string>
     <string name="already_add_the_bike">上传失败，您已上传过该车辆</string>
 
+    <string name="input_bike_id_here">在此输入车号</string>
+    <string name="image_view_arrow_description">提示用户输入车号的箭头</string>
+    <string name="empty_box">空盒子</string>
+    <string name="text_empty">空空如也</string>
+    <string name="text_error">出错啦</string>
+
 </resources>
