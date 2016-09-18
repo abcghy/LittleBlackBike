@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -21,11 +22,13 @@ import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.SaveCallback;
 import com.lapism.searchview.SearchView;
 import com.orhanobut.logger.Logger;
+import com.pnikosis.materialishprogress.ProgressWheel;
 import com.rengwuxian.materialedittext.MaterialEditText;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
@@ -33,6 +36,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cn.shu.sakura.littleblackbike.R;
 import cn.shu.sakura.littleblackbike.model.Bike;
+import cn.shu.sakura.littleblackbike.model.ThumbUp;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -113,19 +117,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 每当按下搜索键，selection到最后，键盘关闭
-//        searchView.setOnKeyListener(new View.OnKeyListener() {
-//            @Override
-//            public boolean onKey(View v, int keyCode, KeyEvent event) {
-//                Logger.d("搜索按钮: view: " + v + ", keyCode: " + keyCode + ", event: " + event);
-//
-//                if (keyCode == KeyEvent.KEYCODE_SEARCH || keyCode == KeyEvent.KEYCODE_ENTER) {
-//                    searchView.hideKeyboard();
-//                }
-//                return false;
-//            }
-//        });
-
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(layoutManager);
@@ -136,6 +127,21 @@ public class MainActivity extends AppCompatActivity {
                 holder.setText(R.id.bike_id, bike.getBikeId());
                 holder.setText(R.id.bike_password, bike.getPassword());
                 holder.setText(R.id.text_thumb_up, String.valueOf(bike.getVote()));
+
+//                holder.setOnClickListener(R.id.layout_thumb_up, new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        // 先查看，自己是否点过该号码其他的？
+//                        AVQuery<ThumbUp> thumbUpAVQuery = AVQuery.getQuery(ThumbUp.class);
+//                        thumbUpAVQuery.whereEqualTo("deviceId", AVUser.getCurrentUser().getUsername());
+//                        thumbUpAVQuery.findInBackground(new FindCallback<ThumbUp>() {
+//                            @Override
+//                            public void done(List<ThumbUp> list, AVException e) {
+//
+//                            }
+//                        });
+//                    }
+//                });
             }
 
         });
@@ -172,8 +178,12 @@ public class MainActivity extends AppCompatActivity {
                         final String addBikePasswordString = addBikePassword.getText().toString();
 
                         // 先判断，这个用户是否上传过这个车子，如果上传过，那就不行
-                        AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
-                        bikeAVQuery.whereEqualTo("upDeviceId", AVUser.getCurrentUser().getUsername());
+                        AVQuery<Bike> upDeviceIdAVQuery = AVQuery.getQuery(Bike.class);
+                        upDeviceIdAVQuery.whereEqualTo("upDeviceId", AVUser.getCurrentUser().getUsername());
+                        AVQuery<Bike> bikeIdAVQuery = AVQuery.getQuery(Bike.class);
+                        bikeIdAVQuery.whereEqualTo("bikeId", addBikeIdString);
+
+                        AVQuery<Bike> bikeAVQuery = AVQuery.and(Arrays.asList(upDeviceIdAVQuery, bikeIdAVQuery));
                         bikeAVQuery.findInBackground(new FindCallback<Bike>() {
                             @Override
                             public void done(List<Bike> list, AVException e) {

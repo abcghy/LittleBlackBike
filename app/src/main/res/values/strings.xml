@@ -18,5 +18,6 @@
     <string name="empty_box">空盒子</string>
     <string name="text_empty">空空如也</string>
     <string name="text_error">出错啦</string>
+    <string name="is_loading">正在载入</string>
 
 </resources>
