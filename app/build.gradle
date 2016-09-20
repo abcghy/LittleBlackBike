@@ -8,7 +8,7 @@ android {
     defaultConfig {
         applicationId "cn.shu.sakura.littleblackbike"
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 2
         versionName "1.01"
     }

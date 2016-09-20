@@ -16,6 +16,7 @@ import butterknife.ButterKnife;
 import cn.shu.sakura.littleblackbike.R;
 import me.wangyuwei.particleview.ParticleView;
 
+
 public class SplashActivity extends AppCompatActivity {
 
     private int count = 0;
@@ -41,7 +42,7 @@ public class SplashActivity extends AppCompatActivity {
         logInAndSignUp();
     }
 
-    private void logInAndSignUp() {
+    public void logInAndSignUp() {
         // 首先登陆 LeanCloud, 如果此设备没有注册用户, 那就注册了之后登陆
         // 1.拿到设备号（独一无二）
         final String deviceId = PhoneUtils.getPhoneIMEI(SplashActivity.this);

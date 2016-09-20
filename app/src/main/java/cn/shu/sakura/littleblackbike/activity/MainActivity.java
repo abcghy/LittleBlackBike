@@ -20,6 +20,7 @@ import com.avos.avoscloud.AVQuery;
 import com.avos.avoscloud.AVUser;
 import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.SaveCallback;
+import com.blankj.utilcode.utils.StringUtils;
 import com.lapism.searchview.SearchView;
 import com.orhanobut.logger.Logger;
 import com.pnikosis.materialishprogress.ProgressWheel;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LinearLayoutManager layoutManager;
 
+    // 此时整个应用的状态
     private int mState = EMPTY;
 
     @Override
@@ -70,6 +72,13 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolBar);
 
+        searchView.setOnMenuClickListener(new SearchView.OnMenuClickListener() {
+            @Override
+            public void onMenuClick() {
+                search(searchView.getQuery().toString());
+            }
+        });
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -78,41 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchView.hideKeyboard();
-                searchView.clearFocus();
-
-                mState = LOADING;
-                refreshState();
-
-                AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
-                bikeAVQuery.whereEqualTo("bikeId", query);
-                bikeAVQuery.findInBackground(new FindCallback<Bike>() {
-                    @Override
-                    public void done(List<Bike> list, AVException e) {
-                        if (e == null) {
-                            // 成功
-                            Logger.d("搜索成功");
-
-                            resources.clear();
-                            if (list == null || list.size() == 0) {
-                                mState = EMPTY;
-                                refreshState();
-                            } else if (list.size() > 0){
-                                resources.addAll(list);
-                                mState = FINISHED;
-                                refreshState();
-                            }
-                            recyclerView.getAdapter().notifyDataSetChanged();
-                        } else {
-                            // 失败
-                            Logger.d("搜索失败");
-                            e.printStackTrace();
-
-                            mState = ERROR;
-                            refreshState();
-                        }
-                    }
-                });
+                search(query);
                 return false;
             }
         });
@@ -149,6 +124,52 @@ public class MainActivity extends AppCompatActivity {
         refreshState();
     }
 
+    /**
+     * 根据 query 搜索相关数据
+     * @param query searchView 中的字符串
+     */
+    private void search(String query) {
+        searchView.hideKeyboard();
+        searchView.clearFocus();
+
+        mState = LOADING;
+        refreshState();
+
+        AVQuery<Bike> bikeAVQuery = AVQuery.getQuery(Bike.class);
+        bikeAVQuery.whereEqualTo("bikeId", query);
+        bikeAVQuery.findInBackground(new FindCallback<Bike>() {
+            @Override
+            public void done(List<Bike> list, AVException e) {
+                if (e == null) {
+                    // 成功
+                    Logger.d("搜索成功");
+
+                    resources.clear();
+                    if (list == null || list.size() == 0) {
+                        mState = EMPTY;
+                        refreshState();
+                    } else if (list.size() > 0){
+                        resources.addAll(list);
+                        mState = FINISHED;
+                        refreshState();
+                    }
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                } else {
+                    // 失败
+                    Logger.d("搜索失败");
+                    e.printStackTrace();
+
+                    mState = ERROR;
+                    refreshState();
+                }
+            }
+        });
+    }
+
+    /**
+     * 点击事件
+     * @param view 所点击的视图
+     */
     @OnClick(R.id.add_fab)
     public void onClick(View view) {
         switch (view.getId()) {
@@ -159,7 +180,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 展示添加对话框
+     */
     private void showAddDialog() {
+        String searchResult = searchView.getQuery().toString();
+
         View view = LayoutInflater
                 .from(MainActivity.this)
                 .inflate(R.layout.layout_add_password, null, true);
@@ -177,47 +203,58 @@ public class MainActivity extends AppCompatActivity {
                         final String addBikeIdString = addBikeId.getText().toString();
                         final String addBikePasswordString = addBikePassword.getText().toString();
 
-                        // 先判断，这个用户是否上传过这个车子，如果上传过，那就不行
-                        AVQuery<Bike> upDeviceIdAVQuery = AVQuery.getQuery(Bike.class);
-                        upDeviceIdAVQuery.whereEqualTo("upDeviceId", AVUser.getCurrentUser().getUsername());
-                        AVQuery<Bike> bikeIdAVQuery = AVQuery.getQuery(Bike.class);
-                        bikeIdAVQuery.whereEqualTo("bikeId", addBikeIdString);
+                        if (!StringUtils.isSpace(addBikeIdString) && !StringUtils.isSpace(addBikePasswordString)) {
+                            // 先判断，这个用户是否上传过这个车子，如果上传过，那就不行
+                            AVQuery<Bike> upDeviceIdAVQuery = AVQuery.getQuery(Bike.class);
+                            upDeviceIdAVQuery.whereEqualTo("upDeviceId", AVUser.getCurrentUser().getUsername());
+                            AVQuery<Bike> bikeIdAVQuery = AVQuery.getQuery(Bike.class);
+                            bikeIdAVQuery.whereEqualTo("bikeId", addBikeIdString);
 
-                        AVQuery<Bike> bikeAVQuery = AVQuery.and(Arrays.asList(upDeviceIdAVQuery, bikeIdAVQuery));
-                        bikeAVQuery.findInBackground(new FindCallback<Bike>() {
-                            @Override
-                            public void done(List<Bike> list, AVException e) {
-                                // 如果有，说明不能上传，如果为零，可以上传
-                                if (list != null && list.size() > 0) {
-                                    // 不可上传
-                                    Toast.makeText(MainActivity.this, "你已上传过该车辆", Toast.LENGTH_SHORT).show();
-                                } else if (list == null || list.size() == 0) {
-                                    // 上传该车辆
-                                    Bike bike = new Bike();
-                                    bike.setBikeId(addBikeIdString);
-                                    bike.setPassword(addBikePasswordString);
-                                    bike.setUpDeviceId(AVUser.getCurrentUser().getUsername());
-                                    bike.setVote(0);
-                                    bike.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(AVException e) {
-                                            if (e == null) {
-                                                // 成功
-                                                Logger.d("上传成功");
-                                                // 提示用户上传成功
-                                                Toast.makeText(MainActivity.this, R.string.add_success_toast, Toast.LENGTH_SHORT).show();
-                                            } else {
-                                                // 失败
-                                                Toast.makeText(MainActivity.this, R.string.add_error_toast, Toast.LENGTH_SHORT).show();
+                            AVQuery<Bike> bikeAVQuery = AVQuery.and(Arrays.asList(upDeviceIdAVQuery, bikeIdAVQuery));
+                            bikeAVQuery.findInBackground(new FindCallback<Bike>() {
+                                @Override
+                                public void done(List<Bike> list, AVException e) {
+                                    // 如果有，说明不能上传，如果为零，可以上传
+                                    if (list != null && list.size() > 0) {
+                                        // 不可上传
+                                        Toast.makeText(MainActivity.this, "你已上传过该车辆", Toast.LENGTH_SHORT).show();
+                                    } else if (list == null || list.size() == 0) {
+                                        // 上传该车辆
+                                        Bike bike = new Bike();
+                                        bike.setBikeId(addBikeIdString);
+                                        bike.setPassword(addBikePasswordString);
+                                        bike.setUpDeviceId(AVUser.getCurrentUser().getUsername());
+                                        bike.setVote(0);
+                                        bike.saveInBackground(new SaveCallback() {
+                                            @Override
+                                            public void done(AVException e) {
+                                                if (e == null) {
+                                                    // 成功
+                                                    Logger.d("上传成功");
+                                                    // 提示用户上传成功
+                                                    Toast.makeText(MainActivity.this, R.string.add_success_toast, Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    // 失败
+                                                    Toast.makeText(MainActivity.this, R.string.add_error_toast, Toast.LENGTH_SHORT).show();
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        } else {
+                            // 不能为空呀
+                            Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 })
                 .show();
+
+        if (!StringUtils.isSpace(searchResult)) {
+            // 如果搜索不为空，就需要开始输入密码
+            addBikeId.setText(searchResult);
+            addBikePassword.requestFocus();
+        }
     }
 
     private void refreshState() {
